@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Life OS">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>My Life OS — V2</title>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--text:#172033;--muted:#667085;--line:#e6e9ef;--accent:#4f46e5;--accent2:#eef2ff;--danger:#dc2626;--shadow:0 8px 25px rgba(16,24,40,.06)}
+[data-theme="dark"]{--bg:#0f1320;--card:#161b2c;--text:#e7e9f2;--muted:#8b93a7;--line:#262c40;--accent:#818cf8;--accent2:#1f2440;--danger:#f87171;--shadow:0 8px 25px rgba(0,0,0,.35)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;transition:background .2s,color .2s}
+button,input,textarea,select{font:inherit}button{cursor:pointer}.app{max-width:1150px;margin:auto;padding:18px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}.brand h1{font-size:24px;margin:0}.brand p{margin:4px 0 0;color:var(--muted);font-size:13px}
+.header-actions{display:flex;gap:8px;flex-wrap:wrap}.iconbtn,.btn{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:10px;padding:9px 12px}.btn.primary{background:var(--accent);color:white;border-color:var(--accent)}.btn.danger{color:var(--danger)}
+nav{display:flex;gap:6px;overflow:auto;margin-bottom:18px}.navbtn{white-space:nowrap;border:0;background:transparent;padding:10px 13px;border-radius:10px;color:var(--muted)}.navbtn.active{background:var(--accent2);color:var(--accent);font-weight:650}
+.page{display:none}.page.active{display:block}.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:16px;box-shadow:var(--shadow)}.span-4{grid-column:span 4}.span-6{grid-column:span 6}.span-8{grid-column:span 8}.span-12{grid-column:span 12}
+.stat{font-size:28px;font-weight:750;margin-top:5px}.muted{color:var(--muted)}.section-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px}.section-title h2{font-size:17px;margin:0}
+form{display:grid;gap:10px}input,textarea,select{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--card);color:var(--text)}textarea{min-height:100px;resize:vertical}.row{display:flex;gap:8px}.row>*{flex:1}
+.item{border:1px solid var(--line);border-radius:12px;padding:12px;margin:8px 0;background:var(--card)}.item-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.item-title{font-weight:650}.item-body{white-space:pre-wrap;margin-top:6px;color:var(--muted)}.meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;font-size:12px;color:var(--muted)}.tag{background:var(--accent2);border-radius:999px;padding:4px 8px}.priority-high{color:#b42318}.priority-medium{color:#b54708}.priority-low{color:#027a48}[data-theme="dark"] .priority-high{color:#fca5a5}[data-theme="dark"] .priority-medium{color:#fcd34d}[data-theme="dark"] .priority-low{color:#6ee7b7}.done{text-decoration:line-through;opacity:.55}.empty{padding:25px;text-align:center;color:var(--muted)}
+.check{width:20px;height:20px;margin-top:1px}.actions{display:flex;gap:5px;flex-wrap:wrap}.small{font-size:12px;padding:6px 8px}.progress{height:8px;background:var(--accent2);border-radius:99px;overflow:hidden;margin-top:9px}.progress>div{height:100%;background:var(--accent)}
+.searchbar{margin-bottom:12px}.searchbar input{font-size:15px}
+.filterbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.filterbar select{width:auto;flex:1 1 120px}
+.checkrow{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px;font-size:14px}.checkrow label{display:flex;align-items:center;gap:6px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#111827;color:white;padding:10px 14px;border-radius:10px;opacity:0;pointer-events:none;transition:.2s;z-index:50}.toast.show{opacity:1}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:28px 0}
+@media(max-width:750px){.app{padding:12px}.span-4,.span-6,.span-8{grid-column:span 12}.header-actions .label{display:none}.brand h1{font-size:21px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="brand"><h1>My Life OS</h1><p id="dateLine"></p></div>
+  <div class="header-actions">
+    <button id="installBtn" class="btn primary" style="display:none">Install</button>
+    <button class="iconbtn" id="themeToggle" title="Toggle dark mode">🌙</button>
+    <button class="btn" onclick="exportData()">Export</button>
+    <label class="btn" style="display:inline-flex;align-items:center">Import<input id="importFile" type="file" accept=".json" hidden></label>
+  </div>
+</header>
+
+<nav>
+  <button class="navbtn active" data-page="dashboard">🏠 Today</button>
+  <button class="navbtn" data-page="thoughts">🧠 Thoughts</button>
+  <button class="navbtn" data-page="tasks">✅ Tasks</button>
+  <button class="navbtn" data-page="goals">🎯 Goals</button>
+  <button class="navbtn" data-page="search">🔎 Search</button>
+</nav>
+
+<section id="dashboard" class="page active">
+  <div class="grid">
+    <div class="card span-4"><div class="muted">Open tasks</div><div class="stat" id="statTasks">0</div></div>
+    <div class="card span-4"><div class="muted">Active goals</div><div class="stat" id="statGoals">0</div></div>
+    <div class="card span-4"><div class="muted">Thoughts captured</div><div class="stat" id="statThoughts">0</div></div>
+    <div class="card span-8">
+      <div class="section-title"><h2>Quick capture</h2></div>
+      <form id="quickForm"><textarea id="quickText" placeholder="What's on your mind? Capture it without organizing it first."></textarea><button class="btn primary">Save thought</button></form>
+    </div>
+    <div class="card span-4">
+      <div class="section-title"><h2>Quick task</h2></div>
+      <form id="quickTaskForm"><input id="quickTask" placeholder="e.g. Review lecture notes"><select id="quickPriority"><option>Medium</option><option>High</option><option>Low</option></select><button class="btn primary">Add task</button></form>
+    </div>
+    <div class="card span-6"><div class="section-title"><h2>Today's tasks</h2><button class="btn small" onclick="showPage('tasks')">View all</button></div><div id="todayTasks"></div></div>
+    <div class="card span-6"><div class="section-title"><h2>Active goals</h2><button class="btn small" onclick="showPage('goals')">View all</button></div><div id="todayGoals"></div></div>
+  </div>
+</section>
+
+<section id="thoughts" class="page">
+  <div class="grid">
+    <div class="card span-4"><div class="section-title"><h2>New thought</h2></div>
+      <form id="thoughtForm"><input id="thoughtTitle" placeholder="Title (optional)"><textarea id="thoughtBody" placeholder="Write anything..."></textarea><input id="thoughtTags" placeholder="Tags, separated by commas"><button class="btn primary">Capture thought</button></form>
+    </div>
+    <div class="card span-8"><div class="section-title"><h2>Thoughts</h2><span class="muted" id="thoughtCount"></span></div><div id="thoughtList"></div></div>
+  </div>
+</section>
+
+<section id="tasks" class="page">
+  <div class="grid">
+    <div class="card span-4"><div class="section-title"><h2>New task</h2></div>
+      <form id="taskForm">
+        <input id="taskTitle" placeholder="Task" required>
+        <div class="row"><select id="taskPriority"><option>Medium</option><option>High</option><option>Low</option></select><input id="taskDue" type="date"></div>
+        <div class="row">
+          <select id="taskRecurrence"><option value="">Does not repeat</option><option value="daily">Repeats daily</option><option value="weekly">Repeats weekly</option><option value="monthly">Repeats monthly</option></select>
+          <select id="taskGoal"><option value="">No goal</option></select>
+        </div>
+        <input id="taskTags" placeholder="Tags, separated by commas"><button class="btn primary">Add task</button>
+      </form>
+    </div>
+    <div class="card span-8">
+      <div class="section-title"><h2>All tasks</h2><button class="btn small danger" onclick="clearCompleted()">Clear completed</button></div>
+      <div class="filterbar">
+        <select id="filterStatus"><option value="all">All statuses</option><option value="open">Open</option><option value="done">Done</option></select>
+        <select id="filterPriority"><option value="all">All priorities</option><option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option></select>
+        <select id="filterTag"><option value="">All tags</option></select>
+        <select id="filterSort"><option value="due">Sort: due date</option><option value="priority">Sort: priority</option><option value="new">Sort: newest</option></select>
+      </div>
+      <div id="taskList"></div>
+    </div>
+  </div>
+</section>
+
+<section id="goals" class="page">
+  <div class="grid">
+    <div class="card span-4"><div class="section-title"><h2>New goal</h2></div>
+      <form id="goalForm"><input id="goalTitle" placeholder="Goal" required><input id="goalDeadline" type="date"><input id="goalTags" placeholder="Tags, separated by commas"><button class="btn primary">Create goal</button></form>
+    </div>
+    <div class="card span-8"><div class="section-title"><h2>Goals</h2></div><div id="goalList"></div></div>
+  </div>
+</section>
+
+<section id="search" class="page">
+  <div class="card">
+    <div class="searchbar"><input id="searchInput" placeholder="Search thoughts, tasks and goals..."></div>
+    <div class="checkrow">
+      <label><input type="checkbox" id="searchThoughts" checked> Thoughts</label>
+      <label><input type="checkbox" id="searchTasks" checked> Tasks</label>
+      <label><input type="checkbox" id="searchGoals" checked> Goals</label>
+    </div>
+    <div id="searchResults"></div>
+  </div>
+</section>
+
+<footer>V2 • Offline-first • Installable • Your data is stored in this browser on this device.</footer>
+</div>
+<div id="toast" class="toast"></div>
+
+<script>
+const KEY='myLifeOS_v1'; // unchanged on purpose: drop this file into the same origin as V1 and existing data carries over
+const THEME_KEY='myLifeOS_theme';
+let db=JSON.parse(localStorage.getItem(KEY)||'{"thoughts":[],"tasks":[],"goals":[]}');
+let editingIds=new Set();
+let taskFilters={status:'all',priority:'all',tag:'',sort:'due'};
+let searchFilters={thoughts:true,tasks:true,goals:true};
+const $=id=>document.getElementById(id);
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const today=()=>new Date().toISOString().slice(0,10);
+
+// --- migration: backfill new fields so old V1 backups/data still work ---
+function migrate(){
+  db.thoughts=(db.thoughts||[]).map(t=>({tags:[],taskId:null,...t}));
+  db.tasks=(db.tasks||[]).map(t=>({tags:[],recurrence:null,goalId:'',thoughtId:null,completedAt:null,...t}));
+  db.goals=(db.goals||[]).map(g=>({tags:[],progress:0,...g}));
+}
+migrate();
+
+function save(){localStorage.setItem(KEY,JSON.stringify(db));render();}
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
+function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+function tags(s){return (s||'').split(',').map(x=>x.trim()).filter(Boolean)}
+function tagHtml(a){return (a||[]).map(x=>`<span class="tag">#${esc(x)}</span>`).join('')}
+function showPage(page){document.querySelectorAll('.page').forEach(x=>x.classList.toggle('active',x.id===page));document.querySelectorAll('.navbtn').forEach(x=>x.classList.toggle('active',x.dataset.page===page));render()}
+document.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>showPage(b.dataset.page));
+
+$('dateLine').textContent=new Intl.DateTimeFormat(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'}).format(new Date());
+
+// --- theme ---
+function applyTheme(t){document.documentElement.dataset.theme=t;$('themeToggle').textContent=t==='dark'?'☀️':'🌙';localStorage.setItem(THEME_KEY,t)}
+applyTheme(localStorage.getItem(THEME_KEY)||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
+$('themeToggle').onclick=()=>applyTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
+
+// --- capture forms ---
+$('quickForm').onsubmit=e=>{e.preventDefault();let body=$('quickText').value.trim();if(!body)return;db.thoughts.unshift({id:uid(),title:'',body,tags:[],created:Date.now(),taskId:null});$('quickText').value='';save();toast('Thought captured')};
+$('quickTaskForm').onsubmit=e=>{e.preventDefault();let title=$('quickTask').value.trim();if(!title)return;db.tasks.unshift({id:uid(),title,priority:$('quickPriority').value,due:today(),tags:[],done:false,created:Date.now(),recurrence:null,goalId:'',thoughtId:null,completedAt:null});$('quickTask').value='';save();toast('Task added')};
+$('thoughtForm').onsubmit=e=>{e.preventDefault();db.thoughts.unshift({id:uid(),title:$('thoughtTitle').value.trim(),body:$('thoughtBody').value.trim(),tags:tags($('thoughtTags').value),created:Date.now(),taskId:null});e.target.reset();save();toast('Thought captured')};
+$('taskForm').onsubmit=e=>{e.preventDefault();const fr=$('taskRecurrence').value;db.tasks.unshift({id:uid(),title:$('taskTitle').value.trim(),priority:$('taskPriority').value,due:$('taskDue').value,tags:tags($('taskTags').value),done:false,created:Date.now(),recurrence:fr?{freq:fr}:null,goalId:$('taskGoal').value||'',thoughtId:null,completedAt:null});e.target.reset();save();toast('Task added')};
+$('goalForm').onsubmit=e=>{e.preventDefault();db.goals.unshift({id:uid(),title:$('goalTitle').value.trim(),deadline:$('goalDeadline').value,tags:tags($('goalTags').value),progress:0,created:Date.now()});e.target.reset();save();toast('Goal created')};
+$('searchInput').oninput=renderSearch;
+['searchThoughts','searchTasks','searchGoals'].forEach(id=>$(id).onchange=()=>{searchFilters={thoughts:$('searchThoughts').checked,tasks:$('searchTasks').checked,goals:$('searchGoals').checked};renderSearch()});
+['filterStatus','filterPriority','filterTag','filterSort'].forEach(id=>$(id).onchange=()=>{taskFilters={status:$('filterStatus').value,priority:$('filterPriority').value,tag:$('filterTag').value,sort:$('filterSort').value};render()});
+
+// --- recurring task logic ---
+function nextDue(dueStr,freq){
+  let d=dueStr?new Date(dueStr+'T00:00:00'):new Date();
+  if(freq==='daily')d.setDate(d.getDate()+1);
+  else if(freq==='weekly')d.setDate(d.getDate()+7);
+  else if(freq==='monthly')d.setMonth(d.getMonth()+1);
+  return d.toISOString().slice(0,10);
+}
+function toggleTask(id){
+  let x=db.tasks.find(t=>t.id===id);if(!x)return;
+  const wasDone=x.done;x.done=!x.done;
+  if(!wasDone&&x.done){
+    x.completedAt=Date.now();
+    if(x.recurrence){
+      const nd=nextDue(x.due,x.recurrence.freq);
+      db.tasks.unshift({...x,id:uid(),done:false,due:nd,created:Date.now(),completedAt:null});
+      toast('Completed — next one repeats '+nd);
+    }
+  }
+  save();
+}
+function deleteItem(type,id){db[type]=db[type].filter(x=>x.id!==id);editingIds.delete(id);save();toast('Deleted')}
+function setProgress(id,v){let x=db.goals.find(x=>x.id===id);if(x){x.progress=Math.max(0,Math.min(100,+v));save()}}
+function clearCompleted(){db.tasks=db.tasks.filter(x=>!x.done);save();toast('Completed tasks cleared')}
+
+// --- linking: thought -> task ---
+function convertThought(id){
+  const t=db.thoughts.find(x=>x.id===id);if(!t||t.taskId)return;
+  const title=(t.title||t.body.split('\n')[0]||'Untitled').slice(0,80);
+  const task={id:uid(),title,priority:'Medium',due:today(),tags:[...(t.tags||[])],done:false,created:Date.now(),recurrence:null,goalId:'',thoughtId:t.id,completedAt:null};
+  db.tasks.unshift(task);t.taskId=task.id;save();toast('Turned into a task');
+}
+
+// --- editing ---
+function startEdit(id){editingIds.add(id);render()}
+function cancelEdit(id){editingIds.delete(id);render()}
+
+function thoughtEditForm(x){
+  return `<div class="item"><form onsubmit="return saveThoughtEdit(event,'${x.id}')">
+    <input name="title" value="${esc(x.title)}" placeholder="Title (optional)">
+    <textarea name="body" placeholder="Write anything...">${esc(x.body)}</textarea>
+    <input name="tags" value="${esc((x.tags||[]).join(', '))}" placeholder="Tags, separated by commas">
+    <div class="row"><button class="btn primary small">Save</button><button type="button" class="btn small" onclick="cancelEdit('${x.id}')">Cancel</button></div>
+  </form></div>`;
+}
+function saveThoughtEdit(e,id){e.preventDefault();const f=e.target;const t=db.thoughts.find(x=>x.id===id);if(t){t.title=f.title.value.trim();t.body=f.body.value.trim();t.tags=tags(f.tags.value);}editingIds.delete(id);save();toast('Thought updated');return false;}
+
+function taskEditForm(x){
+  const goalOptions=db.goals.map(g=>`<option value="${g.id}" ${x.goalId===g.id?'selected':''}>${esc(g.title)}</option>`).join('');
+  const freq=x.recurrence?x.recurrence.freq:'';
+  return `<div class="item"><form onsubmit="return saveTaskEdit(event,'${x.id}')">
+    <input name="title" value="${esc(x.title)}" required>
+    <div class="row">
+      <select name="priority"><option ${x.priority==='Medium'?'selected':''}>Medium</option><option ${x.priority==='High'?'selected':''}>High</option><option ${x.priority==='Low'?'selected':''}>Low</option></select>
+      <input name="due" type="date" value="${x.due||''}">
+    </div>
+    <div class="row">
+      <select name="recurrence"><option value="" ${freq===''?'selected':''}>Does not repeat</option><option value="daily" ${freq==='daily'?'selected':''}>Repeats daily</option><option value="weekly" ${freq==='weekly'?'selected':''}>Repeats weekly</option><option value="monthly" ${freq==='monthly'?'selected':''}>Repeats monthly</option></select>
+      <select name="goalId"><option value="">No goal</option>${goalOptions}</select>
+    </div>
+    <input name="tags" value="${esc((x.tags||[]).join(', '))}" placeholder="Tags, separated by commas">
+    <div class="row"><button class="btn primary small">Save</button><button type="button" class="btn small" onclick="cancelEdit('${x.id}')">Cancel</button></div>
+  </form></div>`;
+}
+function saveTaskEdit(e,id){e.preventDefault();const f=e.target;const x=db.tasks.find(t=>t.id===id);if(x){x.title=f.title.value.trim();x.priority=f.priority.value;x.due=f.due.value;x.tags=tags(f.tags.value);x.goalId=f.goalId.value||'';const fr=f.recurrence.value;x.recurrence=fr?{freq:fr}:null;}editingIds.delete(id);save();toast('Task updated');return false;}
+
+function goalEditForm(x){
+  return `<div class="item"><form onsubmit="return saveGoalEdit(event,'${x.id}')">
+    <input name="title" value="${esc(x.title)}" required>
+    <input name="deadline" type="date" value="${x.deadline||''}">
+    <input name="tags" value="${esc((x.tags||[]).join(', '))}" placeholder="Tags, separated by commas">
+    <div class="row"><button class="btn primary small">Save</button><button type="button" class="btn small" onclick="cancelEdit('${x.id}')">Cancel</button></div>
+  </form></div>`;
+}
+function saveGoalEdit(e,id){e.preventDefault();const f=e.target;const g=db.goals.find(x=>x.id===id);if(g){g.title=f.title.value.trim();g.deadline=f.deadline.value;g.tags=tags(f.tags.value);}editingIds.delete(id);save();toast('Goal updated');return false;}
+
+// --- item renderers ---
+function taskItem(x){
+  if(editingIds.has(x.id))return taskEditForm(x);
+  const goal=x.goalId?db.goals.find(g=>g.id===x.goalId):null;
+  const badges=[
+    x.due?`<span>Due ${esc(x.due)}</span>`:'',
+    tagHtml(x.tags),
+    x.recurrence?`<span class="tag">🔁 ${esc(x.recurrence.freq)}</span>`:'',
+    goal?`<span class="tag">🎯 ${esc(goal.title)}</span>`:'',
+    x.thoughtId?'<span class="tag">🧠 from a thought</span>':''
+  ].join('');
+  return `<div class="item"><div class="item-top"><div style="display:flex;gap:9px"><input class="check" type="checkbox" ${x.done?'checked':''} onchange="toggleTask('${x.id}')"><div><div class="item-title ${x.done?'done':''}">${esc(x.title)}</div><div class="meta"><span class="priority-${x.priority.toLowerCase()}">${esc(x.priority)}</span>${badges}</div></div></div><div class="actions"><button class="iconbtn small" onclick="startEdit('${x.id}')">✎</button><button class="iconbtn small" onclick="deleteItem('tasks','${x.id}')">✕</button></div></div></div>`;
+}
+function goalItem(x){
+  if(editingIds.has(x.id))return goalEditForm(x);
+  const linked=db.tasks.filter(t=>t.goalId===x.id);
+  const linkedMeta=linked.length?`<span>${linked.filter(t=>t.done).length}/${linked.length} linked tasks done</span>`:'';
+  return `<div class="item"><div class="item-top"><div><div class="item-title">${esc(x.title)}</div><div class="meta">${x.deadline?`<span>Target ${esc(x.deadline)}</span>`:''}${linkedMeta}${tagHtml(x.tags)}</div></div><div class="actions"><button class="iconbtn small" onclick="startEdit('${x.id}')">✎</button><button class="iconbtn small" onclick="deleteItem('goals','${x.id}')">✕</button></div></div><div class="progress"><div style="width:${x.progress}%"></div></div><div class="row" style="margin-top:8px"><input type="range" min="0" max="100" value="${x.progress}" oninput="setProgress('${x.id}',this.value)"><span class="muted" style="flex:0 0 40px;text-align:right">${x.progress}%</span></div></div>`;
+}
+function thoughtItem(x){
+  if(editingIds.has(x.id))return thoughtEditForm(x);
+  const convertBtn=x.taskId?'<span class="tag">✅ turned into a task</span>':`<button class="iconbtn small" onclick="convertThought('${x.id}')">→ Task</button>`;
+  return `<div class="item"><div class="item-top"><div><div class="item-title">${esc(x.title||'Untitled thought')}</div><div class="meta"><span>${new Date(x.created).toLocaleString()}</span>${tagHtml(x.tags)}</div></div><div class="actions">${convertBtn}<button class="iconbtn small" onclick="startEdit('${x.id}')">✎</button><button class="iconbtn small" onclick="deleteItem('thoughts','${x.id}')">✕</button></div></div><div class="item-body">${esc(x.body)}</div></div>`;
+}
+
+// --- filtering ---
+function filteredTasks(){
+  return db.tasks.filter(x=>{
+    if(taskFilters.status==='open'&&x.done)return false;
+    if(taskFilters.status==='done'&&!x.done)return false;
+    if(taskFilters.priority!=='all'&&x.priority!==taskFilters.priority)return false;
+    if(taskFilters.tag&&!(x.tags||[]).includes(taskFilters.tag))return false;
+    return true;
+  }).sort((a,b)=>{
+    if(taskFilters.sort==='due')return (a.due||'9999-99-99').localeCompare(b.due||'9999-99-99');
+    if(taskFilters.sort==='priority'){const order={High:0,Medium:1,Low:2};return order[a.priority]-order[b.priority];}
+    return b.created-a.created;
+  });
+}
+function refreshFilterOptions(){
+  const tagSel=$('filterTag');const cur=taskFilters.tag;
+  const uniqueTags=[...new Set(db.tasks.flatMap(t=>t.tags||[]))].sort();
+  tagSel.innerHTML='<option value="">All tags</option>'+uniqueTags.map(t=>`<option value="${esc(t)}" ${t===cur?'selected':''}>#${esc(t)}</option>`).join('');
+  const goalSel=$('taskGoal');const curGoal=goalSel.value;
+  goalSel.innerHTML='<option value="">No goal</option>'+db.goals.map(g=>`<option value="${g.id}" ${g.id===curGoal?'selected':''}>${esc(g.title)}</option>`).join('');
+}
+
+function render(){
+  $('statTasks').textContent=db.tasks.filter(x=>!x.done).length;
+  $('statGoals').textContent=db.goals.filter(x=>x.progress<100).length;
+  $('statThoughts').textContent=db.thoughts.length;
+  let tt=db.tasks.filter(x=>!x.done&&(x.due===today()||!x.due)).slice(0,8);
+  $('todayTasks').innerHTML=tt.length?tt.map(taskItem).join(''):'<div class="empty">No tasks for today 🎉</div>';
+  let gg=db.goals.filter(x=>x.progress<100).slice(0,5);
+  $('todayGoals').innerHTML=gg.length?gg.map(goalItem).join(''):'<div class="empty">No active goals.</div>';
+  $('thoughtCount').textContent=db.thoughts.length;
+  $('thoughtList').innerHTML=db.thoughts.length?db.thoughts.map(thoughtItem).join(''):'<div class="empty">Your captured thoughts will appear here.</div>';
+  refreshFilterOptions();
+  const ft=filteredTasks();
+  $('taskList').innerHTML=ft.length?ft.map(taskItem).join(''):(db.tasks.length?'<div class="empty">No tasks match these filters.</div>':'<div class="empty">No tasks yet.</div>');
+  $('goalList').innerHTML=db.goals.length?db.goals.map(goalItem).join(''):'<div class="empty">No goals yet.</div>';
+  renderSearch();
+}
+function renderSearch(){
+  const q=($('searchInput').value||'').trim().toLowerCase();
+  if(!q){$('searchResults').innerHTML='<div class="empty">Type something to search your local data.</div>';return}
+  let out=[];
+  if(searchFilters.thoughts)db.thoughts.forEach(x=>{if((x.title+' '+x.body+' '+(x.tags||[]).join(' ')).toLowerCase().includes(q))out.push(`<div class="item"><b>🧠 Thought</b>${thoughtItem(x)}</div>`)});
+  if(searchFilters.tasks)db.tasks.forEach(x=>{if((x.title+' '+(x.tags||[]).join(' ')).toLowerCase().includes(q))out.push(`<div class="item"><b>✅ Task</b>${taskItem(x)}</div>`)});
+  if(searchFilters.goals)db.goals.forEach(x=>{if((x.title+' '+(x.tags||[]).join(' ')).toLowerCase().includes(q))out.push(`<div class="item"><b>🎯 Goal</b>${goalItem(x)}</div>`)});
+  $('searchResults').innerHTML=out.length?out.join(''):'<div class="empty">Nothing found.</div>';
+}
+function exportData(){const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='my-life-os-backup.json';a.click();URL.revokeObjectURL(a.href);toast('Backup exported')}
+$('importFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.thoughts||!x.tasks||!x.goals)throw Error();db=x;migrate();save();toast('Backup imported')}catch{toast('Invalid backup file')}};r.readAsText(f);e.target.value=''};
+
+// --- PWA install prompt ---
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',(e)=>{e.preventDefault();deferredPrompt=e;$('installBtn').style.display='inline-flex';});
+$('installBtn').onclick=async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('installBtn').style.display='none';};
+window.addEventListener('appinstalled',()=>{$('installBtn').style.display='none';toast('Installed')});
+
+// --- service worker registration (no-op if not served over http/https) ---
+if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost')){
+  window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})});
+}
+
+render();
+</script>
+</body>
+</html>
